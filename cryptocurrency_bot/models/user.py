@@ -10,8 +10,6 @@ from utils.dt import (
 from . import exceptions
 
 
-
-
 class UserBase(object):
     """
     User base class
@@ -30,7 +28,7 @@ class UserBase(object):
         language(str): user's language
     """
 
-    def __init__(self, user_data:dict):
+    def __init__(self, user_data: dict):
         supported_fields = [
             'id', 'is_active', 'is_pro', 'is_staff',
             'to_notify_by_experts', 'rates', 'timezone', 'language'
@@ -42,7 +40,7 @@ class UserBase(object):
             self.rates = self.normalize_rates(self.rates)
 
     @staticmethod
-    def normalize_rates(rates:list) -> dict:
+    def normalize_rates(rates: list) -> dict[str, dict[str, float]]:
         return {
             rate['iso']: { 
                 'check_times': rate['check_times'],
@@ -53,7 +51,7 @@ class UserBase(object):
         }
 
     @staticmethod
-    def prettify_rates(rates:dict) -> str:
+    def prettify_rates(rates: dict) -> str:
         total_str = ''
         for idx, (k, v) in enumerate(rates.items(), start=1):
             total_str += (
@@ -76,11 +74,10 @@ class UserBase(object):
             yield i
 
 
-
 class User(UserBase):
     db = DBHandler(settings.DB_NAME)
 
-    def __init__(self, user_id:int):
+    def __init__(self, user_id: int):
         if not self.__class__.exists(user_id):
             self.init_user(user_id)
         data = self.db.get_user(user_id)
@@ -103,12 +100,12 @@ class User(UserBase):
                 self.__dict__[k] = v
 
     @classmethod
-    def from_dict(cls, data:dict) -> 'User':
+    def from_dict(cls, data: dict) -> 'User':
         bare_user = cls.__new__(cls)
         super(cls, bare_user).__init__(data)
         return bare_user
 
-    def get_currencies_by_check_time(self, check_time:str, /) -> dict:
+    def get_currencies_by_check_time(self, check_time: str, /) -> dict:
         """
         Get currencies info where its check time equals some check_time
         type: instancemethod
@@ -127,7 +124,7 @@ class User(UserBase):
     def predictions(self):
         return list(self.get_predictions())
 
-    def get_predictions(self, *, only_actual:bool=True) -> 'Prediction':
+    def get_predictions(self, *, only_actual: bool = True) -> 'Prediction':
         """
         Get user's predictions
         type: instancemethod
@@ -142,7 +139,7 @@ class User(UserBase):
                 ):
             yield Prediction.from_dict(pred_data)
 
-    def update_rates(self, iso:str, **kwargs) -> None:
+    def update_rates(self, iso: str, **kwargs) -> None:
         """
         Update some rates values, also in database
         type: instancemethod
@@ -162,8 +159,8 @@ class User(UserBase):
         self.rates = self.normalize_rates(self.db.get_user_rates(self.id))
 
     def create_prediction(
-            self, iso_from:str, iso_to:str, value:float, 
-            up_to_date:datetime
+            self, iso_from: str, iso_to: str, value: float, 
+            up_to_date: datetime
             ) -> None:
         """
         Create a prediction by user
@@ -231,7 +228,7 @@ class User(UserBase):
         return True
 
     @classmethod
-    def init_user(cls, user_id:int) -> True:
+    def init_user(cls, user_id: int) -> True:
         """
         Initialize user in database
         type: classmethod
@@ -256,7 +253,7 @@ class User(UserBase):
         )
 
     @classmethod
-    def exists(cls, user_id:int) -> bool:
+    def exists(cls, user_id: int) -> bool:
         """
         Check if user with user_id exists
         type: classmethod
@@ -307,7 +304,7 @@ class User(UserBase):
             yield cls.from_dict(user_data)
 
     @classmethod
-    def get_users_by_check_time(cls, check_time:str):
+    def get_users_by_check_time(cls, check_time: str):
         """
         Get users which have in some of their rates check_times `check_time`
         type: classmethod
@@ -320,7 +317,7 @@ class User(UserBase):
         for user_data in cls.db.get_users_by_check_time(check_time):
             yield cls.from_dict(user_data)
 
-    def init_premium(self, up_to_datetime:datetime) -> True:
+    def init_premium(self, up_to_datetime: datetime) -> True:
         """
         Init user premium (`is_pro`),
         set all possible check times for all rates,
@@ -398,22 +395,21 @@ class User(UserBase):
         return self.__str__()
 
 
-
 class Prediction(object):
     db = DBHandler(settings.DB_NAME)
 
-    def __init__(self, pred_id:int):
+    def __init__(self, pred_id: int):
         for k, v in self.db.get_prediction(pred_id).items():
             self.__dict__[k] = v
 
     @classmethod
-    def from_dict(cls, pred_data:dict) -> 'Prediction':
+    def from_dict(cls, pred_data: dict) -> 'Prediction':
         bare_pred = cls.__new__(cls)
         for k, v in pred_data.items():
             bare_pred.__dict__[k] = v
         return bare_pred
 
-    def toggle_like(self, user_id:int, reaction:bool=True) -> None:
+    def toggle_like(self, user_id: int, reaction: bool = True) -> None:
         """
         Set a reaction to a prediction by user
         type: instancemethod
@@ -430,7 +426,7 @@ class Prediction(object):
         """
         self.db.toggle_prediction_reaction(self.id, user_id, reaction)
 
-    def delete(self, *, force:bool=False) -> True:
+    def delete(self, *, force: bool = False) -> True:
         """
         Delete a prediction from database
         type: instancemethod
@@ -498,7 +494,7 @@ class Prediction(object):
         return self.db.get_prediction_dislikes(self.id)
 
     @classmethod
-    def exists(cls, pred_id:int) -> bool:
+    def exists(cls, pred_id: int) -> bool:
         """
         Check if prediction exists
         type: classmethod
@@ -511,7 +507,7 @@ class Prediction(object):
         return cls.db.check_prediction_exists(pred_id)
 
     @classmethod
-    def get_experts_predictions(cls, *, only_actual:bool=False):
+    def get_experts_predictions(cls, *, only_actual: bool = False):
         """
         Get all predictions with `is_by_experts` is True
         type: classmethod
@@ -571,7 +567,7 @@ class Prediction(object):
     def __repr__(self):
         return self.__str__()
 
-    def trepr(self, user:User) -> str:
+    def trepr(self, user: User) -> str:
         """ Telegram repr """
         return (
             "{}-{}, {}".format(
@@ -583,7 +579,7 @@ class Prediction(object):
             )
         )
 
-    def tstr(self, user:User) -> str:
+    def tstr(self, user: User) -> str:
         """ Telegram str """
         return (
             "Prediction\nCurrencies: {}-{}\n"
@@ -600,7 +596,6 @@ class Prediction(object):
         )
 
 
-
 class Session(object):
     """
     A temporary session which can be easily removed, replaced etc.
@@ -611,13 +606,13 @@ class Session(object):
     """
     db = SessionDBHandler(settings.DB_NAME)
 
-    def __init__(self, user_id:int):
+    def __init__(self, user_id: int):
         self.user = User(user_id)
         if not self.__class__.exists(user_id):
             self.db.add_session(user_id)
 
     @classmethod
-    def exists(cls, user_id:int):
+    def exists(cls, user_id: int):
         """
         Check whether session with `user_id` exists
 
@@ -640,7 +635,7 @@ class Session(object):
         """
         self.db.decrease_count(self.user.user_id)
 
-    def set_count(self, count:int) -> None:
+    def set_count(self, count: int) -> None:
         """
         Set `free_notifications_count` to `count`
 

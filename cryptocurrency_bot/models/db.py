@@ -10,7 +10,6 @@ from utils.decorators import private, rangetest
 from . import exceptions
 
 
-
 sqlite3.register_adapter(
     datetime, lambda x: x.strftime('%Y-%m-%d %H:%M:%S').encode('ascii')
 )
@@ -27,7 +26,7 @@ sqlite3.register_converter(
 
 
 class DBHandlerBase(abc.ABC):
-    def __init__(self, db_name:str=None):
+    def __init__(self, db_name: str = None):
         self.DB_NAME = db_name or settings.DB_NAME
         self.setup_db()
 
@@ -143,9 +142,9 @@ class DBHandler(DBHandlerBase):
         )
 
     def add_user(
-            self, user_id:int, is_active:bool=True, is_pro=False,
-            is_staff:bool=False, to_notify_by_experts:bool=True, 
-            timezone:int=0, language:str='en'
+            self, user_id: int, is_active: bool = True, is_pro=False,
+            is_staff: bool = False, to_notify_by_experts: bool = True, 
+            timezone: int = 0, language: str = 'en'
             ):
         """
         Add user to database
@@ -183,9 +182,9 @@ class DBHandler(DBHandlerBase):
 
     @rangetest(value=(0, float('inf')))
     def add_user_rate(
-            self, user_id:int, iso:str, value:float=1,
-            percent_delta:float=0.01, 
-            check_times:list=settings.DEFAULT_CHECK_TIMES
+            self, user_id: int, iso: str, value: float = 1,
+            percent_delta: float = 0.01, 
+            check_times: list = settings.DEFAULT_CHECK_TIMES
     ):
         """
         Add rate to user
@@ -214,8 +213,8 @@ class DBHandler(DBHandlerBase):
 
     @rangetest(value=(0, float("inf")))
     def add_prediction(
-            self, user_id:int, iso_from:str, iso_to:str,
-            value:float, up_to_date:datetime, is_by_experts:bool=False
+            self, user_id: int, iso_from: str, iso_to: str,
+            value: float, up_to_date: datetime, is_by_experts: bool = False
     ) -> bool:
         """
         Add prediction to database
@@ -273,7 +272,7 @@ class DBHandler(DBHandlerBase):
             'SELECT id FROM currency_predictions WHERE id = ?', (pred_id,)
         )) > 0
 
-    def check_user_rate_exists(self, user_id:int, iso:str):
+    def check_user_rate_exists(self, user_id: int, iso: str):
         """
         Check if user rate exists
 
@@ -292,7 +291,7 @@ class DBHandler(DBHandlerBase):
             f"user {user_id} does not exist", cause='id'
         )
 
-    def get_users_by_check_time(self, check_time:str) -> list:
+    def get_users_by_check_time(self, check_time: str) -> list:
         """
         Get all users, where `check_time` in check times
 
@@ -312,7 +311,7 @@ class DBHandler(DBHandlerBase):
             )
         ]
 
-    def get_user(self, user_id:int):
+    def get_user(self, user_id: int):
         """
         Get all user data (except the predictions)
 
@@ -335,7 +334,7 @@ class DBHandler(DBHandlerBase):
             f"user id {user_id} does not exist", cause='id'
         )
 
-    def get_all_users(self, *, if_all:bool=True):
+    def get_all_users(self, *, if_all: bool = True):
         """
         :keyword arguments:
             if_all(bool)=True: to include staff users
@@ -378,7 +377,7 @@ class DBHandler(DBHandlerBase):
             )
         ]
 
-    def get_pro_users(self, *, only_temp:bool=False):
+    def get_pro_users(self, *, only_temp: bool = False):
         """
         Get all users who are pro and active
         
@@ -398,7 +397,7 @@ class DBHandler(DBHandlerBase):
             )
         ]
 
-    def get_user_rates(self, user_id:int):
+    def get_user_rates(self, user_id: int):
         """
         Get user's rates
 
@@ -421,7 +420,7 @@ class DBHandler(DBHandlerBase):
             f"user id {user_id} does not exist", cause='id'
         )
 
-    def get_prediction(self, pred_id:int):
+    def get_prediction(self, pred_id: int):
         """
         Get prediction by its id
 
@@ -454,7 +453,7 @@ class DBHandler(DBHandlerBase):
             ORDER BY up_to_date ASC'
         )
 
-    def get_user_predictions(self, user_id:int, *, only_actual:bool=False):
+    def get_user_predictions(self, user_id: int, *, only_actual: bool = False):
         """
         Return all predictions user made
 
@@ -500,7 +499,7 @@ class DBHandler(DBHandlerBase):
             "no predictions in database", cause="empty database"
         )
 
-    def get_closest_prediction_neighbours(self, pred_id:int):
+    def get_closest_prediction_neighbours(self, pred_id: int):
         """
         Get previous and next predictions' ids of prediction
 
@@ -544,7 +543,7 @@ class DBHandler(DBHandlerBase):
             f"prediction id {pred_id} does not exist", cause='id'
         )
 
-    def get_experts_predictions(self, *, only_actual:bool=False):
+    def get_experts_predictions(self, *, only_actual: bool = False):
         """
         Get all prediction with `is_by_experts` = True
 
@@ -574,7 +573,7 @@ class DBHandler(DBHandlerBase):
             WHERE datetime() > datetime(up_to_date) AND real_value is NULL'
         )
 
-    def change_user(self, user_id:int, **kwargs):
+    def change_user(self, user_id: int, **kwargs):
         """
         Change some of user's data
 
@@ -615,7 +614,7 @@ class DBHandler(DBHandlerBase):
         )
 
     @rangetest(value=(0, float("inf")))
-    def change_user_rate(self, user_id:int, iso:str, **kwargs):
+    def change_user_rate(self, user_id: int, iso: str, **kwargs):
         """
         Change some of user's rate data
 
@@ -652,7 +651,7 @@ class DBHandler(DBHandlerBase):
             f"rate {iso} of user {user_id} does not exist", cause='iso'
         )                
 
-    def delete_user_rate(self, user_id:int, iso:str):
+    def delete_user_rate(self, user_id: int, iso: str):
         """
         Delete user rate
 
@@ -676,7 +675,7 @@ class DBHandler(DBHandlerBase):
         )
 
     @rangetest(value=(0, float("inf")), real_value=(0, float("inf")))
-    def change_prediction(self, pred_id:int, **kwargs):
+    def change_prediction(self, pred_id: int, **kwargs):
         """
         Change some values of prediction
 
@@ -725,7 +724,7 @@ class DBHandler(DBHandlerBase):
             f"prediction id {pred_id} does not exist", cause='id'
         )
 
-    def delete_prediction(self, pred_id:int):
+    def delete_prediction(self, pred_id: int):
         """
         Delete prediction from db
 
@@ -747,7 +746,7 @@ class DBHandler(DBHandlerBase):
         )
 
     def toggle_prediction_reaction(
-            self, pred_id:int, user_id:int, reaction:bool=True
+            self, pred_id: int, user_id: int, reaction: bool = True
             ):
         """
         Set a reaction to prediction by user
@@ -785,7 +784,7 @@ class DBHandler(DBHandlerBase):
             )
         return True
 
-    def get_prediction_likes(self, pred_id:int):
+    def get_prediction_likes(self, pred_id: int):
         """
         Get total count of prediction likes
 
@@ -809,7 +808,7 @@ class DBHandler(DBHandlerBase):
             f"prediction id {pred_id} does not exist", cause='id'
         )
 
-    def get_prediction_dislikes(self, pred_id:int):
+    def get_prediction_dislikes(self, pred_id: int):
         """
         Get total count of prediction dislikes
 
@@ -869,7 +868,7 @@ class SessionDBHandler(DBHandlerBase):
             )''' % settings.DEFAULT_EXPERT_PREDICTIONS_NOTIFICATIONS_NUMBER
         )
 
-    def check_session_exists(self, user_id:int) -> bool:
+    def check_session_exists(self, user_id: int) -> bool:
         """
         Check if session exists in db by user's id
 
@@ -884,7 +883,7 @@ class SessionDBHandler(DBHandlerBase):
             )
         ) > 0
 
-    def add_session(self, user_id:int) -> True:
+    def add_session(self, user_id: int) -> True:
         """
         Add session to db
 
@@ -905,7 +904,7 @@ class SessionDBHandler(DBHandlerBase):
             f"session with user {user_id} already exists", cause='user_id'
         )
 
-    def delete_session(self, user_id:int) -> True:
+    def delete_session(self, user_id: int) -> True:
         """
         Delete session from db
 
@@ -923,7 +922,7 @@ class SessionDBHandler(DBHandlerBase):
             f"session with user {user_id} does not exist", cause='user_id'
         )            
 
-    def get_session(self, user_id:int) -> dict:
+    def get_session(self, user_id: int) -> dict:
         """
         Get session data from db
 
@@ -951,7 +950,7 @@ class SessionDBHandler(DBHandlerBase):
         """
         return self.execute("SELECT * FROM sessions")
 
-    def decrease_count(self, user_id:int) -> True:
+    def decrease_count(self, user_id: int) -> True:
         """
         Decrease the `free_notifications_count` by 1
 
@@ -974,7 +973,7 @@ class SessionDBHandler(DBHandlerBase):
             f"session with user id {user_id} does not exist", cause='user_id'
         )
 
-    def set_count(self, user_id:int, count:int):
+    def set_count(self, user_id: int, count: int):
         """
         Set `free_notifications_count` to some number
 
@@ -997,7 +996,7 @@ class SessionDBHandler(DBHandlerBase):
             f"session with user id {user_id} does not exist", cause='user_id'
         )
 
-    def fetch_count(self, user_id:int, *, with_decrease:bool=False):
+    def fetch_count(self, user_id: int, *, with_decrease: bool = False):
         """
         Get count `free_notifications_count`
 

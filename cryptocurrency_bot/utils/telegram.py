@@ -4,7 +4,7 @@ from telebot import types
 __all__ = ['kbs', 'inline_kbs']
 
 
-def kbs(buttons, one_time_keyboard=True, row_width:int=None):
+def kbs(buttons, one_time_keyboard=True, row_width: int = None):
     """
     Creates a Telegram Keyboard
     :param buttons:
@@ -25,7 +25,7 @@ def kbs(buttons, one_time_keyboard=True, row_width:int=None):
     return kb
 
 
-def inline_kbs(buttons:dict, row_width:int=3):
+def inline_kbs(buttons: dict, row_width: int = 3):
     markup = types.InlineKeyboardMarkup(row_width=row_width)
     buttons = [
         types.InlineKeyboardButton(

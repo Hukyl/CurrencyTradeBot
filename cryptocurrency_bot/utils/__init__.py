@@ -68,7 +68,7 @@ def prettify_percent(n: float, to_sign: bool = False):
 
 
 @decorators.rangetest(strict_range=False, percent=(0.0, 1.0))
-def substract_percent(value:float, percent:float):
+def substract_percent(value: float, percent: float):
     return prettify_float(value - (value * percent))
 
 

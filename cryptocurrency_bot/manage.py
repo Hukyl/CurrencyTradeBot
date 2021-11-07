@@ -7,14 +7,14 @@ from time import sleep
 import schedule
 import argparse
 
-from models.user import *
+from configs import settings
+from models.user import User, Session
 from models.logger import Logger, cprint
 from utils import dt
 from utils import infinite_loop
 
 
-
-def is_valid_file(parser, arg, *, ext:str=None, check_exists:bool=True):
+def is_valid_file(parser, arg, *, ext: str = None, check_exists: bool = True):
     if check_exists and not os.path.exists(arg):
         parser.error(f"The file {arg} does not exist!")
     elif ext and os.path.splitext(arg)[1] != ext:
@@ -23,7 +23,7 @@ def is_valid_file(parser, arg, *, ext:str=None, check_exists:bool=True):
         return arg
 
 
-def runbot(level:str):
+def runbot(level: str):
     import main_bot
     targets = [
         main_bot.schedule_thread,
@@ -44,7 +44,7 @@ def runbot(level:str):
     main_bot.settings.logger.info("Bot stopped")
 
 
-def check_subscribed(ids:list):
+def check_subscribed(ids: list):
     for user_id in ids:
         if not User.exists(user_id):
             cprint(f"FAILURE: No user found by id: {user_id}", "red")
@@ -62,7 +62,7 @@ def check_subscribed(ids:list):
             cprint(f"SUCCESS: User {user_id} IS NOT subscribed", "green")
 
 
-def give_staff(ids:list):
+def give_staff(ids: list):
     for user_id in ids:
         if not User.exists(user_id):
             cprint(f"FAILURE: No user found by id: {user_id}", "red")
@@ -81,7 +81,7 @@ def give_staff(ids:list):
             )
 
 
-def remove_staff(ids:list):
+def remove_staff(ids: list):
     for user_id in ids:
         if not User.exists(user_id):
             cprint(f"FAILURE: No user found by id: {user_id}", "red")
@@ -97,7 +97,7 @@ def remove_staff(ids:list):
             )
 
 
-def get_notification_count(ids:list):
+def get_notification_count(ids: list):
     for user_id in ids:
         if not User.exists(user_id):
             cprint(f"FAILURE: No user found by id: {user_id}", "red")
@@ -111,7 +111,7 @@ def get_notification_count(ids:list):
         )
 
 
-def set_notification_count(user_id:int, count:int):
+def set_notification_count(user_id: int, count: int):
     if not User.exists(user_id):
         cprint(f"FAILURE: No user found by id: {user_id}", "red")
         sys.exit(1)
@@ -123,7 +123,7 @@ def set_notification_count(user_id:int, count:int):
     )
 
 
-def create_db_dump(db_filename:str, dump_filename:str):
+def create_db_dump(db_filename: str, dump_filename: str):
     with sqlite3.connect(db_filename) as conn:
         with open(dump_filename, 'w') as file:
             for line in conn.iterdump():
@@ -131,14 +131,13 @@ def create_db_dump(db_filename:str, dump_filename:str):
     cprint("SUCCESS: dump was created successfully", "green")
 
 
-def load_db_dump(dump_filename:str, db_filename:str):
+def load_db_dump(dump_filename: str, db_filename: str):
     if os.path.isfile(db_filename):
         os.remove(db_filename)
     with sqlite3.connect(db_filename) as conn:
         with open(dump_filename, 'r') as file:
             conn.executescript(file.read())
     cprint("SUCCESS: database was created successfully", "green")
-
 
 
 if __name__ == '__main__':
