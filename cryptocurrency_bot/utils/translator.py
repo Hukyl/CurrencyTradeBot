@@ -525,7 +525,7 @@ translation_dict = {
 }
 
 
-def translate(text:str, dest:str='ru'):
+def translate(text: str, dest: str = 'ru'):
     """
     Translates text into language, by translation_dict or Google Translator
     """

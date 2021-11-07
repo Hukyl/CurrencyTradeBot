@@ -1,7 +1,8 @@
 import random
+from typing import Optional
 
 import requests
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup as bs, Tag
 
 from utils.agent import get_useragent
 from utils.translator import translate as _
@@ -11,7 +12,6 @@ from . import exceptions
 
 
 __all__ = ['CurrencyExchanger']
-
 
 
 class Parser(object):
@@ -27,13 +27,13 @@ class Parser(object):
     """
 
     def __init__(
-            self, link:str, css_selector:str, *, 
-            proxy_list:list=get_proxy_list()
+            self, link: str, css_selector: str, *, 
+            proxy_list: Optional[list] = None
             ):
+        self.proxy_list = proxy_list or get_proxy_list()
         self.session = requests.Session()
         self.link = link
         self.css_selector = css_selector
-        self.proxy_list = proxy_list
 
     def get_response(self) -> requests.Response:
         """
@@ -58,7 +58,7 @@ class Parser(object):
                 self.session = requests.Session()
         return q
 
-    def test_response(self, response:requests.Response) -> bool:
+    def test_response(self, response: requests.Response) -> bool:
         """
         Test if response is suitable for parsing
 
@@ -71,7 +71,7 @@ class Parser(object):
             soup=self.get_soup(html=self.get_html(response=response))
         ) is not None
 
-    def get_html(self, *, response:requests.Response=None) -> str:
+    def get_html(self, *, response: Optional[requests.Response] = None) -> str:
         """
         Get html from response
 
@@ -83,7 +83,7 @@ class Parser(object):
         """
         return (response or self.get_response()).text
 
-    def get_soup(self, *, html:str=None) -> bs:
+    def get_soup(self, *, html: Optional[str] = None) -> bs:
         """
         Get soup from html
 
@@ -95,7 +95,7 @@ class Parser(object):
         """
         return bs(html or self.get_html(), "html.parser")
 
-    def get_element(self, *, soup:bs=None):
+    def get_element(self, *, soup: Optional[bs] = None) -> Tag:
         """
         Get element from soup by css selector
 
@@ -121,7 +121,10 @@ class CurrencyParser(Parser):
         value(float | None): last parsed exchange rate
     """
 
-    def __init__(self, iso:str, *args, default_value:float=None, **kwargs):
+    def __init__(
+                self, iso: str, *args, 
+                default_value: Optional[float] = None, **kwargs
+            ):
         super().__init__(*args, **kwargs)
         self.iso = iso
         self.default_value = default_value or get_default_rates(
@@ -130,7 +133,7 @@ class CurrencyParser(Parser):
         self.value = None
         self.update_value(safe=True)
 
-    def to_string(self, *, to_update:bool=True):
+    def to_string(self, *, to_update: Optional[bool] = True):
         """
         :return stringified exchange rate
 
@@ -140,7 +143,7 @@ class CurrencyParser(Parser):
         :return:
             exchange_rate(str)
         """
-        iso_str = self.iso or ""
+        iso_str = getattr(self, 'ISO', "")
         rate = self.get_rate().get('USD') if to_update else self.value
         if iso_str:
             return f"{iso_str} = {rate} USD"
@@ -175,9 +178,9 @@ class CurrencyParser(Parser):
         return {self.iso: 1, 'USD': number}
 
     def check_delta(
-            self, old:float=None, new:float=None, 
-            percent_delta:float=0.01
-            ) -> dict:
+            self, old: Optional[float] = None, new: Optional[float] = None, 
+            percent_delta: Optional[float] = 0.01
+            ) -> dict[str, float]:
         """
         Check delta between two latest rates
 
@@ -199,7 +202,7 @@ class CurrencyParser(Parser):
             del res['new'], res['percentage_difference'], res['difference']
         return res
 
-    def update_value(self, *, safe:bool=False) -> bool:
+    def update_value(self, *, safe: Optional[bool] = False) -> bool:
         """
         Update value by latest
 
@@ -220,7 +223,7 @@ class CurrencyParser(Parser):
             return False
 
     @staticmethod
-    def calculate_difference(old:float, new:float) -> dict:
+    def calculate_difference(old: float, new: float) -> dict[str, float]:
         """
         Calculate actual and percentage difference between values
 
@@ -240,7 +243,6 @@ class CurrencyParser(Parser):
         }
 
 
-
 class RTSParser(CurrencyParser):
     iso = "RTS"
 
@@ -255,20 +257,16 @@ class RTSParser(CurrencyParser):
         )
 
 
-
 class BitcoinParser(CurrencyParser):
     iso = "BTC"
 
     def __init__(self, *args, **kwargs):
-        link = "https://www.coindesk.com/price/bitcoin"
-        css_selector = "#export-chart-element > div > section > \
-                        div.coin-info-list.price-list > div:nth-child(1) > \
-                        div.data-definition > div"
+        link = "https://coinmarketcap.com/currencies/bitcoin/"
+        css_selector = "div.priceValue"
         super().__init__(
             link=link, css_selector=css_selector, 
             iso=self.iso, *args, **kwargs
         )
-
 
 
 class FreecurrencyratesParser(Parser):
@@ -279,7 +277,7 @@ class FreecurrencyratesParser(Parser):
         self.start_css_selector = "#rate-iso-{}"
         super().__init__(link=None, css_selector=None, *args, **kwargs)
 
-    def get_rate(self, iso_from:str, iso_to:str="USD"):
+    def get_rate(self, iso_from: str, iso_to: Optional[str] = "USD"):
         """
         Override CurrencyParser.get_rate()
         """
@@ -296,7 +294,7 @@ class FreecurrencyratesParser(Parser):
         number = float(rate.get("value").strip().replace(",", "."))
         return {iso_from: 1, iso_to: number}
 
-    def check_currency_exists(self, currency:str):
+    def check_currency_exists(self, currency: str):
         """
         Check if currency exists
 
@@ -314,15 +312,15 @@ class FreecurrencyratesParser(Parser):
         finally:
             self.link = None
 
-    def test_response(self, q:requests.Response) -> bool:
+    def test_response(self, q: requests.Response) -> bool:
         """
         Override Parser.test_response()
         """
         return q.ok
 
     def check_delta(
-            self, iso_from:str, iso_to:str, value:float=1, 
-            percent_delta:float=0.01
+            self, iso_from: str, iso_to: str, value: Optional[float] = 1, 
+            percent_delta: float = 0.01
             ):
         old, new = value, self.get_rate(iso_from, iso_to).get(iso_to)
         res = self.calculate_difference(old, new)
@@ -339,10 +337,9 @@ class FreecurrencyratesParser(Parser):
         """
         return CurrencyParser.calculate_difference(*args, **kwargs)
 
-    def to_string(self, iso_from:str, iso_to:str):
+    def to_string(self, iso_from: str, iso_to: str):
         rate = self.get_rate(iso_from, iso_to)
         return f"{iso_from} - {rate.get(iso_to)} {iso_to}"
-
 
 
 class InvestingParser(CurrencyParser):
@@ -362,23 +359,23 @@ class InvestingParser(CurrencyParser):
         'GAS-OIL': 'london-gas-oil'
     }
 
-    def __init__(self, market_product:str, *args, **kwargs):
+    def __init__(self, market_product: str, *args, **kwargs):
         assert (
             market_product in self.AVAILABLE_PRODUCTS
         ), 'not supported market product - {}'.format(repr(market_product))
         link = "https://m.investing.com/commodities/{}".format(
             self.AVAILABLE_PRODUCTS[market_product]
         )
-        css_selector = '#last_last'
+        css_selector = R'#__next > div > div > div.grid.gap-4.tablet\:gap-6.grid-cols-4.tablet\:grid-cols-8.desktop\:grid-cols-12.grid-container--fixed-desktop.general-layout_main__3tg3t > main > div > div.instrument-header_instrument-header__1SRl8.instrument-page_section__79xMl.tablet\:grid.tablet\:grid-cols-2 > div:nth-child(2) > div.instrument-price_instrument-price__3uw25.instrument-price_instrument-price-lg__3ES-Q.flex.items-end.flex-wrap > span'
         super().__init__(
             link=link, css_selector=css_selector, 
             iso=market_product, *args, **kwargs
         )
 
 
-
 class CurrencyExchanger(CurrencyParser):
-    def __init__(self, *, proxy_list:list=get_proxy_list()):
+    def __init__(self, *, proxy_list: list = None):
+        self.proxy_list = proxy_list or get_proxy_list()
         self.parsers = {
             parser.iso: parser 
             for parser in [
@@ -392,7 +389,7 @@ class CurrencyExchanger(CurrencyParser):
         }
         self.default_parser = FreecurrencyratesParser(proxy_list=proxy_list)
 
-    def get_rate(self, iso_from:str, iso_to:str):
+    def get_rate(self, iso_from: str, iso_to: str):
         """
         Get rate by currencies
 
@@ -437,8 +434,8 @@ class CurrencyExchanger(CurrencyParser):
             self.parsers[curr].update_value(*args, **kwargs)
 
     def check_delta(
-            self, iso_from:str, iso_to:str, old:float, 
-            percent_delta:float=0.01
+            self, iso_from: str, iso_to: str, old: float, 
+            percent_delta: Optional[float] = 0.01
             ):
         new = self.get_rate(iso_from, iso_to).get(iso_to)
         rate = self.calculate_difference(old, new)
@@ -448,13 +445,13 @@ class CurrencyExchanger(CurrencyParser):
             del rate['new'], rate['percentage_difference'], rate['difference']
         return rate
 
-    def check_rate_exists(self, iso_from:str, iso_to:str):
+    def check_rate_exists(self, iso_from: str, iso_to: str):
         return all(
             x in self.parsers or self.default_parser.check_currency_exists(x)
             for x in [iso_from, iso_to]
         )
 
-    def to_string(self, *, to_update:bool=False):
+    def to_string(self, *, to_update: Optional[bool] = False):
         return '\n'.join([
             "{} = {} USD".format(
                 parser.iso, prettify_float(
@@ -464,7 +461,7 @@ class CurrencyExchanger(CurrencyParser):
             for parser in self.parsers.values()
         ])
 
-    def to_telegram_string(self, user_language:str):
+    def to_telegram_string(self, user_language: str):
         main_currs = sorted(settings.MAIN_CURRENCIES)
         other_currs = sorted(
             list(set(self.parsers) - set(settings.MAIN_CURRENCIES))

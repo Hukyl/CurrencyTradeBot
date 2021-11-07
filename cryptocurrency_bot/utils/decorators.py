@@ -33,7 +33,7 @@ def public(types=None, *attributes):
     return accessControl(types, failIf=(lambda attr: attr not in attributes))
 
 
-def rangetest(strict_range:bool=True, **kargs):
+def rangetest(strict_range: bool = True, **kargs):
     """
     Test if argument in range of values, otherwise AssertionError
 

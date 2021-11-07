@@ -9,13 +9,20 @@ from telebot.types import LabeledPrice
 import schedule
 
 from configs import settings
-from models.parsers import *
+from models.parsers import CurrencyExchanger
 from models.user import User, Prediction, Session
 from models import exceptions
-from utils import *
+from utils import (
+    get_proxy_list, prettify_float, get_json_config, substract_percent,
+    prettify_percent, prettify_utcoffset
+)
 from utils.translator import translate as _
 from utils.telegram import kbs, inline_kbs
-from utils.dt import *
+from utils.dt import (
+    convert_datetime, check_datetime_in_future, convert_from_country_format, 
+    adapt_datetime, convert_to_country_format, get_now, get_country_dt_example,
+    adapt_check_times
+)
 
 
 telebot.apihelper.ENABLE_MIDDLEWARE = True
@@ -1531,7 +1538,7 @@ def subscription_payment_success(msg):
     )
     settings.logger.info(
         "{} paid for subscription until {}".format(
-            str(user), adapt(datetime_expires, 0)
+            str(user), adapt_datetime(datetime_expires, 0)
         )
     )
     return start_bot(msg)
@@ -1708,7 +1715,7 @@ def verify_predictions():
         user = User(pred.user_id)
         try:
             pred_res = currency_parser.get_rate(pred.iso_from, pred.iso_to)
-        except exceptions.ParserError:
+        except exceptions.ParsingError:
             settings.logger.error(
                 f"Rate {pred.iso_from}-{pred.iso_to} is unreachable"
             )
@@ -1779,7 +1786,7 @@ def send_alarm(user, t):
                 )
             )
         else:
-            if rate.get('new', None) is not None:  # WARNING: CAN BE DELETED
+            if rate.get('new', None) is not None:
                 new, old = rate.get('new'), rate.get('old')
                 user.update_rates(k, value=new)
                 try:

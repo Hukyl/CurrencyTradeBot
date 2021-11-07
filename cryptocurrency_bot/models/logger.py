@@ -10,7 +10,6 @@ DEBUG = 'debug'
 WARNING = WARN = 'warning'
 
 
-
 class Logger(object):
     MAX_SIZE = 100 * 1024  # bytes
     LOG_LEVELS = {
@@ -59,7 +58,7 @@ class Logger(object):
     def logfile_size_ok(self) -> bool:
         return os.path.getsize(self.logfile.name) < self.MAX_SIZE
 
-    def log(self, message:str, /, *, kind:str) -> None:
+    def log(self, message: str, /, *, kind: str) -> None:
         """
         Log message to console and to file
 
@@ -85,19 +84,19 @@ class Logger(object):
             if not self.logfile_size_ok:
                 self.update_logfile()
 
-    def error(self, message:str, /) -> None:
+    def error(self, message: str, /) -> None:
         return self.log(message, kind="error")
 
-    def warning(self, message:str, /) -> None:
+    def warning(self, message: str, /) -> None:
         return self.log(message, kind="warning")
 
-    def info(self, message:str, /) -> None:
+    def info(self, message: str, /) -> None:
         return self.log(message, kind="info")
 
-    def debug(self, message:str, /) -> None:
+    def debug(self, message: str, /) -> None:
         return self.log(message, kind="debug")
 
-    def set_level(self, level:str, /) -> None:
+    def set_level(self, level: str, /) -> None:
         """
         Set some min level of logs
         Any lower-level logs will be discarded
