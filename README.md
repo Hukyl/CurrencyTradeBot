@@ -1,9 +1,9 @@
-# Currency Bot
+# Currency Trade Bot
 
 
 ## What is it?
 ----------------------------------------
-**Currency Bot** is a Telegram bot, which supports you in trade business. It provides notifications about the 
+**Currency Trade Bot** is a Telegram bot, which supports you in trade business. It provides notifications about the 
 changes in currency rates, such as BRENT and some business shares, and helps you prognose the changes.
 
 
@@ -52,4 +52,4 @@ Telegram: @Hukyl
 
 
 ----------------------------------------
-**Copyright (C) 2020-2021 Andrey Shalaev**
+**Copyright (C) 2020-2022 Andrey Shalaev**
